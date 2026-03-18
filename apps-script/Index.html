@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      #copyInsightsBtn:hover {
+  background:#00695c;
+  }
+      /* ================================
+      AI INSIGHTS – ENHANCED UI 
+================================ */
+.ai-report {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #1a237e;
+}
+
+.ai-section {
+  background: #f7f9ff;
+  border: 1px solid #d6ddff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.ai-section-title {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+
+.ai-section ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.ai-section li {
+  margin-bottom: 4px;
+  list-style: none;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.ai-section li::before {
+  content: "•";
+  font-size: 18px;
+  color: #3f51b5;
+  line-height: 14px;
+  position: relative;
+  top: 0px;
+}
+
+/* Section Title Colors */
+.ai-summary  .ai-section-title { color: #1565c0; }
+.ai-spend    .ai-section-title { color: #283593; }
+.ai-risk     .ai-section-title { color: #c62828; }
+.ai-savings  .ai-section-title { color: #2e7d32; }
+.ai-daily    .ai-section-title { color: #6d4c41; }
+.ai-reco     .ai-section-title { color: #00897b; }
+
+/* Trend Arrow Styling */
+.ai-trend-up   { color: #2e7d32; font-weight: bold; }   /* Green Up Arrow */
+.ai-trend-down { color: #c62828; font-weight: bold; }   /* Red Down Arrow */
+
+/* Rupee highlight */
+.ai-rupee {
+  font-weight: 600;
+  color: #283593;
+}
+      body {
+        font-family: Arial, sans-serif;
+        padding: 16px;
+        background: linear-gradient(135deg, #eef2ff, #f8f9ff);
+      }
+      h2 {
+        color: #1a237e;
+        margin-top: 0;
+        font-size: 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      h2 span.icon {
+        font-size: 1.6rem;
+      }
+      label {
+        display: block;
+        margin-top: 8px;
+        color: #444;
+        font-weight: 500;
+      }
+      input, select, button {
+        width: 100%;
+        padding: 7px;
+        margin-top: 4px;
+        box-sizing: border-box;
+        font-size: 0.95rem;
+      }
+      .row { margin-bottom: 12px; }
+      button {
+        background-color: #1976d2;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover { background-color: #125a9c; }
+      .success { color: #2e7d32; }
+      .error   { color: #c62828; }
+
+      .card {
+        background: white;
+        padding: 14px;
+        border-radius: 10px;
+        margin-bottom: 18px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        border: 1px solid #e0e0ff;
+      }
+      .card-title {
+        font-weight: 600;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #283593;
+      }
+      .card-title span.icon {
+        font-size: 1.2rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th, td {
+        padding: 6px;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.85rem;
+      }
+      th {
+        background: #fafafa;
+        font-weight: 600;
+      }
+
+      .qa-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .qa-group button {
+        width: auto;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+      }
+
+      /* Floating Help Button */
+      #helpFab {
+        position: fixed;
+        bottom: 18px;
+        right: 18px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #3949ab;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        cursor: pointer;
+        z-index: 10000;
+        font-size: 1.4rem;
+      }
+      #helpFab:hover {
+        background: #283593;
+      }
+    </style>
+
+    <!-- Google Charts Loader -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  </head>
+
+  <body>
+    <h2><span class="icon">📊</span>Expense Manager – Monthly Dashboard</h2>
+
+    <!-- Top Help / Onboarding Button -->
+    <button onclick="openGuide()" style="
+      width:auto;
+      padding:6px 12px;
+      margin-bottom:14px;
+      background:#3949ab;
+      color:white;
+      border-radius:6px;
+      font-size:0.85rem;
+      border:none;
+      cursor:pointer;">
+      ℹ️ Help / Onboarding Guide
+    </button>
+
+    <!-- Month Selector -->
+    <div class="row">
+      <label>📅 Select Month</label>
+      <input type="month" id="monthPicker" />
+    </div>
+
+    <!-- Card Filter -->
+    <div class="row">
+      <label>💳 Card Filter</label>
+      <select id="cardFilter">
+        <option value="ALL">All Cards</option>
+        <option value="HDFC">HDFC</option>
+        <option value="ICICI">ICICI</option>
+        <option value="AMAZON">AMAZON</option>
+        <option value="AXIS">AXIS</option>
+        <option value="YES">YES</option>
+        <option value="SBI">SBI</option>
+      </select>
+    </div>
+
+    <!-- SUMMARY SNAPSHOT -->
+    <div class="card">
+      <div class="card-title"><span class="icon">📌</span>Summary Snapshot</div>
+      <div id="summaryContent">Loading...</div>
+    </div>
+    
+    <!-- AI FINANCE COACH -->
+<div class="card">
+  <div class="card-title">
+    <span class="icon">🤖</span>AI Finance Coach – Monthly Insights
+  </div>
+
+  <p style="font-size:0.9rem; color:#555; margin-top:6px;">
+    Generate AI‑powered insights about your spending, budgets, patterns, savings, and risks for the selected month.
+  </p>
+
+  <button onclick="loadAiInsights()" style="
+    width:auto;
+    padding:8px 16px;
+    margin-top:10px;
+    background:#283593;
+    color:white;
+    border-radius:6px;
+    font-size:0.9rem;
+    border:none;
+    cursor:pointer;">
+    🔮 Generate AI Monthly Insights
+  </button>
+
+  <div id="aiInsightsArea"
+     style="margin-top:14px; background:#f4f7ff; border:1px solid #dce3ff; padding:12px; 
+            border-radius:8px; min-height:60px; color:#1a237e; font-size:0.9rem; display:none;">
+</div>
+
+<!-- MONTHLY AI TREND COMPARISON (COMPACT) -->
+<div class="card">
+  <div class="card-title">
+    <span class="icon">📉</span> Monthly Trend Comparison (Compact)
+  </div>
+
+  <p style="font-size:0.85rem; color:#555; margin-top:6px;">
+    Compare this month to the previous month in one compact, data-driven view.
+  </p>
+
+  <button onclick="loadAiTrendComparisonCompact()"
+          style="width:auto; padding:7px 14px; margin-top:8px;
+                 background:#4527a0; color:white; border:none; border-radius:6px;
+                 font-size:0.85rem; cursor:pointer;">
+    📉 Compare Months
+  </button>
+
+  <div id="aiTrendCompactArea"
+       style="margin-top:12px; background:#f8faff; border:1px solid #e0e5ff;
+              padding:10px; border-radius:8px; min-height:60px; font-size:0.88rem;">
+    Select a month above, then click "Compare Months"
+  </div>
+</div>
+
+<!-- COPY BUTTON -->
+<button onclick="copyAiInsights()" 
+        style="margin-top:8px; background:#00897b; color:white; 
+               border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-size:0.85rem; display:none;"
+        id="copyInsightsBtn">
+    📋 Copy AI Insights
+</button>
+</div>
+
+<button onclick="downloadAiInsightsPDF()"
+        style="margin-top:8px; background:#5c6bc0; color:white; 
+               border:none; padding:8px 14px; border-radius:6px; cursor:pointer; 
+               font-size:0.85rem; display:none;" 
+        id="downloadPdfBtn">
+    📄 Download PDF
+</button>
+
+    <!-- BUDGET SUMMARY -->
+    <div class="card">
+      <div class="card-title"><span class="icon">💰</span>Budget Summary</div>
+      <div id="budgetSummaryContent">Loading...</div>
+    </div>
+
+
+    <!-- CHARTS -->
+<div class="card">
+  <div class="card-title">
+    <span class="icon">📈</span>Charts
+  </div>
+
+  <!-- SUB-CATEGORY MANAGER -->
+<div class="card">
+  <div class="card-title">
+    <span class="icon">🧹</span>Manage Sub‑Categories (Merge / Rename)
+  </div>
+
+  <div class="row">
+    <label>Category</label>
+    <select id="mgrCategory" onchange="onMgrCategoryChange()">
+      <option value="">Select category...</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <label>Action</label>
+    <select id="mgrAction" onchange="onMgrActionChange()">
+      <option value="RENAME">Rename one sub‑category</option>
+      <option value="MERGE">Merge multiple sub‑categories into one</option>
+    </select>
+  </div>
+
+  <!-- Rename block -->
+  <div id="mgrRenameBlock" class="row">
+    <label>From (old sub‑category)</label>
+    <select id="mgrFromSub"></select>
+
+    <label style="margin-top:10px;">To (new sub‑category name)</label>
+    <input id="mgrToSub" type="text" placeholder="e.g., Swiggy/Zomato" />
+  </div>
+
+  <!-- Merge block -->
+  <div id="mgrMergeBlock" class="row" style="display:none;">
+    <label>Select sub‑categories to merge (Ctrl/Cmd+Click for multi-select)</label>
+    <select id="mgrMergeFromSubs" multiple size="6" style="height:auto;"></select>
+
+    <label style="margin-top:10px;">Merge into (target sub‑category name)</label>
+    <input id="mgrMergeToSub" type="text" placeholder="e.g., Swiggy/Zomato" />
+  </div>
+
+  <div class="row">
+    <label>
+      <input type="checkbox" id="mgrDeactivateOld" checked>
+      Deactivate old sub‑categories in CATEGORY_CONFIG (recommended)
+    </label>
+  </div>
+
+  <button type="button" onclick="applySubCategoryChange()" style="background:#c62828;">
+    ✅ Apply Change
+  </button>
+
+  <div id="mgrStatus" style="margin-top:10px; font-size:0.85rem; color:#333;"></div>
+</div>
+
+  <!-- Drilldown selector -->
+  <div class="row" style="margin-top:10px;">
+    <label>📂 Drilldown Category</label>
+    <select id="drillCategory" onchange="renderChartsOnly()">
+      <option value="ALL">All</option>
+    </select>
+    <div style="font-size:0.75rem;color:#666;margin-top:4px;">
+      Select a category to see sub-category breakdown for the month.
+    </div>
+  </div>
+
+  <!-- Sub-category chart -->
+  <div id="subCategoryChart"
+       style="height:260px;margin-top:12px; display:none;">
+    Loading…
+  </div>
+  <div id="subDebug" style="font-size:0.75rem;color:#666;margin-top:6px;"></div>
+
+  <!-- Existing charts -->
+  <div id="categoryChart" style="height:260px;margin-top:10px;">Loading…</div>
+  <div id="dailyTrendChart" style="height:260px;margin-top:20px;">Loading…</div>
+  <div id="cardChart" style="height:260px;margin-top:20px;">Loading…</div>
+</div>
+
+    <!-- SEARCH & FILTER + QUICK ACTIONS -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🔎</span>Search &amp; Filter</div>
+
+      <div class="row">
+        <label>Search text</label>
+        <input type="text" id="searchText" placeholder="food, amazon, hdfc, gold, etc." />
+      </div>
+
+      <div class="row">
+        <label>Transaction Type</label>
+        <select id="searchType">
+          <option value="ALL">All</option>
+          <option value="EXP">EXP - Expense</option>
+          <option value="CC">CC - Card Swipe</option>
+          <option value="BILL">BILL - Payment</option>
+          <option value="CR">CR - Income</option>
+          <option value="SAV">SAV - Savings</option>
+        </select>
+      </div>
+
+      <div class="row">
+  <label>Category</label>
+  <select id="searchCategory" onchange="onSearchCategoryChange()">
+    <option value="ALL">All</option>
+  </select>
+</div>
+
+<div class="row">
+  <label>Sub-Category</label>
+  <select id="searchSubCategory">
+    <option value="ALL">All</option>
+  </select>
+</div>
+
+
+      <div class="row">
+        <label>Card</label>
+        <select id="searchCard">
+          <option value="ALL">All</option>
+          <option value="HDFC">HDFC</option>
+          <option value="ICICI">ICICI</option>
+          <option value="AMAZON">AMAZON</option>
+          <option value="AXIS">AXIS</option>
+          <option value="YES">YES</option>
+          <option value="SBI">SBI</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>Date Range</label>
+        <input type="date" id="searchDateFrom"> to
+        <input type="date" id="searchDateTo">
+      </div>
+
+      <div class="row">
+        <label>Amount Range</label>
+        <input type="number" id="searchMinAmount" placeholder="Min">
+        <input type="number" id="searchMaxAmount" placeholder="Max">
+      </div>
+
+      <!-- QUICK ACTIONS - TIME -->
+      <div class="row">
+        <label>Quick Actions – Time</label>
+        <div class="qa-group">
+          <button type="button" onclick="quickAction('last7')">Last 7 days</button>
+          <button type="button" onclick="quickAction('last15')">Last 15 days</button>
+          <button type="button" onclick="quickAction('thisMonth')">This Month</button>
+          <button type="button" onclick="quickAction('lastMonth')">Last Month</button>
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS - SPEND -->
+      <div class="row">
+        <label>Quick Actions – Spend</label>
+        <div class="qa-group">
+          <button type="button" onclick="quickAction('large1k')">&gt; 1000 (EXP)</button>
+          <button type="button" onclick="quickAction('large3k')">&gt; 3000 (EXP)</button>
+          <button type="button" onclick="quickAction('large5k')">&gt; 5000 (EXP)</button>
+          <button type="button" onclick="quickAction('onlyExp')">Only EXP</button>
+          <button type="button" onclick="quickAction('onlySav')">Only SAV</button>
+          <button type="button" onclick="quickAction('onlyCC')">Only CC</button>
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS - CATEGORY -->
+      <div class="row">
+        <label>Quick Actions – Category</label>
+        <div class="qa-group">
+          <button type="button" onclick="quickAction('catFood')">Food</button>
+          <button type="button" onclick="quickAction('catShopping')">Shopping</button>
+          <button type="button" onclick="quickAction('catTravel')">Travel</button>
+          <button type="button" onclick="quickAction('catGroceries')">Groceries</button>
+          <button type="button" onclick="quickAction('catFuel')">Fuel</button>
+          <button type="button" onclick="quickAction('catInvest')">Investments</button>
+        </div>
+      </div>
+
+      <button onclick="runSearch()">🔍 Run Search</button>
+
+      <div id="searchResults" style="margin-top:10px;">
+        No search yet.
+      </div>
+    </div>
+
+    <!-- DAILY SUMMARY -->
+    <div class="card">
+      <div class="card-title"><span class="icon">📆</span>Daily Summary</div>
+      <div id="dailySummaryContent">Loading...</div>
+    </div>
+
+    <!-- ADD TRANSACTION -->
+    <div class="card">
+      <div class="card-title"><span class="icon">➕</span>Add Transaction</div>
+
+      <div class="row">
+        <label>Type</label>
+        <select id="type" onchange="onTypeChange()">
+          <option value="EXP">EXP - Expense</option>
+          <option value="CC">CC - Card Swipe</option>
+          <option value="BILL">BILL - Payment</option>
+          <option value="CR">CR - Income</option>
+          <option value="SAV">SAV - Savings</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>Amount</label>
+        <input type="number" id="amount" min="1">
+      </div>
+
+      <div class="row" id="categoryRow">
+  <label>Category</label>
+  <select id="category" onchange="onCategoryChange()">
+    <option value="">Select category...</option>
+  </select>
+</div>
+
+<div class="row" id="subCategoryRow">
+  <label>Sub-Category</label>
+  <div style="display:flex; gap:8px; align-items:center;">
+    <select id="subCategory" style="flex:1;">
+      <option value="">Select sub-category...</option>
+    </select>
+    <button type="button" onclick="promptAddSubCategory()" style="width:auto; padding:6px 10px; background:#455a64;">
+      ➕
+    </button>
+  </div>
+  <div style="font-size:0.75rem; color:#666; margin-top:4px;">
+    Click ➕ to add a new sub-category under the selected category.
+  </div>
+</div>
+
+      <div class="row" id="cardRow" style="display:none;">
+        <label>Card</label>
+        <select id="card">
+          <option value="HDFC">HDFC</option>
+          <option value="ICICI">ICICI</option>
+          <option value="AMAZON">AMAZON</option>
+          <option value="AXIS">AXIS</option>
+          <option value="YES">YES</option>
+          <option value="SBI">SBI</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>Notes</label>
+        <input type="text" id="notes">
+      </div>
+
+      <div class="row">
+        <label>Entry Date</label>
+        <input type="date" id="entryDate">
+      </div>
+
+      <button onclick="submitForm()">💾 Save Transaction</button>
+      <div id="message"></div>
+    </div>
+
+    <!-- Onboarding Modal -->
+    <div id="guideModal" style="
+      display:none;
+      position:fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(0,0,0,0.55);
+      z-index:9999;
+      padding:20px;
+    ">
+      <div style="
+        background:white;
+        max-width:600px;
+        margin:40px auto;
+        padding:20px;
+        border-radius:12px;
+        box-shadow:0 4px 12px rgba(0,0,0,0.25);
+        max-height:80vh;
+        overflow-y:auto;
+      ">
+
+        <h2 style="margin-top:0; font-size:1.3rem; color:#283593;">
+          🧭 Welcome to Your Finance Dashboard!
+        </h2>
+
+        <p style="margin-top:0;">
+          This short guide helps you understand each part of your dashboard and how to use it effectively.
+        </p>
+
+        <hr>
+
+        <h3>📌 1. Summary Snapshot</h3>
+        <p>
+          • Month at a glance – expenses, savings, net cash flow, credits, CC outstanding<br>
+          • Includes an <b>Insights</b> block highlighting key patterns.
+        </p>
+
+        <h3>💰 2. Budget Summary</h3>
+        <p>
+          • Shows <b>overall budget</b> and remaining amount<br>
+          • Displays <b>category-wise budgets</b>, so you can see where you are over or under.
+        </p>
+
+        <h3>📈 3. Charts</h3>
+        <p>
+          • Category Pie → where your money goes<br>
+          • Daily Trend → how expenses are distributed across days<br>
+          • Card Spend vs Bills → usage and repayments for each card.
+        </p>
+
+        <h3>🔎 4. Search & Filter</h3>
+        <p>
+          • Search by notes, category, card, type, date range, and amount range.<br>
+          • Results are shown in a detailed table.
+        </p>
+
+        <h3>⚡ 5. Quick Actions</h3>
+        <p>
+          • Time-based shortcuts (Last 7 days, This Month, etc.)<br>
+          • Large spend filters (&gt;1000, &gt;3000, &gt;5000)<br>
+          • Category shortcuts (Food, Shopping, Investments, etc.).
+        </p>
+
+        <h3>📆 6. Daily Summary</h3>
+        <p>
+          • Shows total debit, credit, and net for each day.
+        </p>
+
+        <h3>➕ 7. Add Transaction</h3>
+        <p>
+          • Add entries as EXP, CC, BILL, CR, or SAV<br>
+          • Use clear categories (Food, MF, NPS, GOLD, etc.) and notes.
+        </p>
+
+        <div style="text-align:right; margin-top:18px;">
+          <button onclick="closeGuide()" style="
+            background:#3949ab;
+            padding:8px 16px;
+            border:none;
+            color:white;
+            border-radius:6px;
+            cursor:pointer;">
+            Close Guide
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Help Button -->
+    <div id="helpFab" onclick="openGuide()" title="Open guide">
+      ❓
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+
+    function downloadAiInsightsPDF() {
+  const htmlContent = document.getElementById("aiInsightsArea").innerHTML;
+
+  if (!htmlContent || htmlContent.trim() === "") {
+    alert("No insights available to export.");
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler((pdfBase64) => {
+      const link = document.createElement("a");
+      link.href = "data:application/pdf;base64," + pdfBase64;
+      link.download = "AI_Finance_Insights.pdf";
+      link.click();
+    })
+    .withFailureHandler(err => {
+      alert("PDF generation failed: " + err.message);
+    })
+    .generateAiInsightsPDF(htmlContent);
+}
+
+      /************** Google Charts Init **************/
+      google.charts.load("current", { packages: ["corechart"] });
+      google.charts.setOnLoadCallback(initApp);
+
+      function initApp() {
+        onTypeChange();
+        loadMonthlyData();
+        loadCategoryConfig();
+        document.getElementById('monthPicker').addEventListener('change', loadMonthlyData);
+        document.getElementById('cardFilter').addEventListener('change', loadMonthlyData);
+      }
+
+      let CATEGORY_MAP = {};
+let NOTES_TOKENS = [];
+
+function loadCategoryConfig() {
+  google.script.run
+    .withSuccessHandler(cfg => {
+      CATEGORY_MAP = cfg.map || {};
+      setTimeout(initSubCategoryManagerUI, 0);
+      populateSearchCategories();
+      const categories = cfg.categories || [];
+
+      const catSel = document.getElementById("category");
+      if (!catSel) return;
+
+      catSel.innerHTML = '<option value="">Select category...</option>';
+      categories.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        catSel.appendChild(opt);
+      });
+
+      onCategoryChange();
+    })
+    .withFailureHandler(err => console.log("Category config error:", err))
+    .getCategoryConfig();
+
+  google.script.run
+    .withSuccessHandler(tokens => {
+      NOTES_TOKENS = tokens || [];
+      renderNoteSuggestions();
+    })
+    .withFailureHandler(err => console.log("Notes token error:", err))
+    .getNotesSuggestionTokens();
+}
+
+  /*----- initSubCategoryManagerUI ----*/
+  function initSubCategoryManagerUI() {
+  // Populate category dropdown using existing CATEGORY_MAP
+  const mgrCat = document.getElementById("mgrCategory");
+  if (!mgrCat) return;
+
+  mgrCat.innerHTML = '<option value="">Select category...</option>';
+  Object.keys(CATEGORY_MAP).sort().forEach(cat => {
+    const opt = document.createElement("option");
+    opt.value = cat;
+    opt.textContent = cat;
+    mgrCat.appendChild(opt);
+  });
+  onMgrCategoryChange();
+  onMgrActionChange();
+}
+
+function onMgrCategoryChange() {
+  const cat = (document.getElementById("mgrCategory").value || "").toUpperCase();
+  const subs = CATEGORY_MAP[cat] || [];
+
+  // Fill rename dropdown
+  const fromSel = document.getElementById("mgrFromSub");
+  if (fromSel) {
+    fromSel.innerHTML = "";
+    subs.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s;
+      opt.textContent = s;
+      fromSel.appendChild(opt);
+    });
+  }
+
+  // Fill merge multi-select
+  const mergeSel = document.getElementById("mgrMergeFromSubs");
+  if (mergeSel) {
+    mergeSel.innerHTML = "";
+    subs.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s;
+      opt.textContent = s;
+      mergeSel.appendChild(opt);
+    });
+  }
+}
+
+function onMgrActionChange() {
+  const action = document.getElementById("mgrAction").value;
+  document.getElementById("mgrRenameBlock").style.display = (action === "RENAME") ? "block" : "none";
+  document.getElementById("mgrMergeBlock").style.display  = (action === "MERGE")  ? "block" : "none";
+}
+
+function applySubCategoryChange() {
+  const cat = (document.getElementById("mgrCategory").value || "").trim();
+  if (!cat) {
+    alert("Select a category first.");
+    return;
+  }
+
+  const action = document.getElementById("mgrAction").value;
+  const deactivateOld = document.getElementById("mgrDeactivateOld").checked;
+  const status = document.getElementById("mgrStatus");
+  status.innerHTML = "⏳ Applying...";
+
+  if (action === "RENAME") {
+    const fromSub = document.getElementById("mgrFromSub").value;
+    const toSub = (document.getElementById("mgrToSub").value || "").trim();
+    if (!fromSub || !toSub) {
+      status.innerHTML = "❌ Please select old sub-category and enter new name.";
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(msg => {
+        status.innerHTML = "✅ " + msg;
+        // reload config so UI updates
+        loadCategoryConfig();
+        setTimeout(initSubCategoryManagerUI, 300);
+      })
+      .withFailureHandler(err => status.innerHTML = "❌ " + err.message)
+      .renameSubCategory(cat, fromSub, toSub, deactivateOld);
+
+  } else {
+    // MERGE
+    const sel = document.getElementById("mgrMergeFromSubs");
+    const fromSubs = Array.from(sel.selectedOptions).map(o => o.value);
+    const toSub = (document.getElementById("mgrMergeToSub").value || "").trim();
+
+    if (!fromSubs.length || !toSub) {
+      status.innerHTML = "❌ Select at least one sub-category and enter target name.";
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(msg => {
+        status.innerHTML = "✅ " + msg;
+        loadCategoryConfig();
+        setTimeout(initSubCategoryManagerUI, 300);
+      })
+      .withFailureHandler(err => status.innerHTML = "❌ " + err.message)
+      .mergeSubCategories(cat, fromSubs, toSub, deactivateOld);
+  }
+}
+
+
+function onCategoryChange() {
+  const cat = (document.getElementById("category").value || "").toUpperCase();
+  const subSel = document.getElementById("subCategory");
+  if (!subSel) return;
+
+  subSel.innerHTML = '<option value="">Select sub-category...</option>';
+
+  const subs = CATEGORY_MAP[cat] || [];
+  subs.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = s;
+    subSel.appendChild(opt);
+  });
+}
+
+function promptAddSubCategory() {
+  const cat = (document.getElementById("category").value || "").trim();
+  if (!cat) {
+    alert("Select a Category first.");
+    return;
+  }
+
+  const sub = prompt("Enter new Sub-Category for: " + cat);
+  if (!sub || !sub.trim()) return;
+
+  google.script.run
+    .withSuccessHandler(() => {
+      loadCategoryConfig();
+      document.getElementById("category").value = cat.toUpperCase();
+      onCategoryChange();
+      setTimeout(() => {
+        document.getElementById("subCategory").value = sub.trim();
+      }, 200);
+    })
+    .withFailureHandler(err => alert("Failed to add: " + err.message))
+    .addCategorySubcategory(cat, sub.trim());
+}
+
+function renderNoteSuggestions() {
+  const box = document.getElementById("noteSuggestions");
+  if (!box) return;
+  box.innerHTML = "";
+
+  const sample = NOTES_TOKENS.slice(0, 12);
+  sample.forEach(tok => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = tok;
+    b.style.width = "auto";
+    b.style.padding = "4px 8px";
+    b.style.fontSize = "0.75rem";
+    b.style.background = "#e8eaf6";
+    b.style.color = "#283593";
+    b.style.border = "none";
+    b.style.borderRadius = "6px";
+    b.style.cursor = "pointer";
+    b.onclick = () => {
+      const notes = document.getElementById("notes");
+      notes.value = (notes.value ? notes.value + " " : "") + tok;
+      notes.focus();
+    };
+    box.appendChild(b);
+  });
+}
+
+      /************** Onboarding Modal **************/
+      function openGuide() {
+        document.getElementById("guideModal").style.display = "block";
+      }
+      function closeGuide() {
+        document.getElementById("guideModal").style.display = "none";
+      }
+
+      /************** Type Toggle (CC/BILL) **************/
+      function onTypeChange() {
+        const type = document.getElementById('type').value;
+        document.getElementById('cardRow').style.display =
+          (type === "CC" || type === "BILL") ? "block" : "none";
+        document.getElementById('categoryRow').style.display =
+          (type === "CC" || type === "BILL") ? "none" : "block";
+      }
+
+      /************** Month Selection **************/
+      function getSelectedMonthKey() {
+  const mp = document.getElementById('monthPicker');
+  if (!mp.value) {
+    const d = new Date();
+    mp.value = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2);
+  }
+  return mp.value;
+}
+
+function loadAiInsights() {
+  const div = document.getElementById("aiInsightsArea");
+  div.style.display = "block";
+  div.innerHTML = "⏳ Generating insights...";
+
+  const monthKey = getSelectedMonthKey();
+
+  google.script.run
+    .withSuccessHandler(text => {
+  div.innerHTML = text;
+
+  document.getElementById("copyInsightsBtn").style.display = "inline-block";
+  document.getElementById("downloadPdfBtn").style.display = "inline-block";  // ← show PDF button
+})
+
+    .withFailureHandler(err => {
+      div.innerHTML = "❌ Error generating AI insights: " + err.message;
+    })
+    .getAiFinanceInsights(monthKey);
+}
+
+function copyAiInsights() {
+  const insights = document.getElementById("aiInsightsArea").innerHTML;
+
+  if (!insights || insights.trim() === "") {
+    alert("No insights to copy yet.");
+    return;
+  }
+
+  // Remove HTML tags for clean copying (optional)
+  const tempEl = document.createElement("div");
+  tempEl.innerHTML = insights;
+  const plainText = tempEl.innerText;
+
+  navigator.clipboard.writeText(plainText)
+    .then(() => {
+      alert("AI Insights copied to clipboard! 📋");
+    })
+    .catch(err => {
+      alert("Could not copy. Please try again.");
+      console.error(err);
+    });
+}
+      /************** Load Monthly Data **************/
+      function loadMonthlyData() {
+        const monthKey = getSelectedMonthKey();
+        const cardFilter = document.getElementById('cardFilter').value;
+
+        google.script.run
+          .withSuccessHandler(result => renderData(result, monthKey))
+          .withFailureHandler(err => alert("Error: " + err.message))
+          .getMonthlyData(monthKey, cardFilter);
+      }
+
+      /************** Render Summary + Budgets + Insights + Charts + Daily **************/
+      function renderData(result, monthKey) {
+        if (!result) return;
+        LAST_MONTH_DATA = result;
+
+        const s          = result.summary || {};
+        const daily      = result.daily || [];
+        const budgetRows = result.categoryBudgets || [];
+        // Simple on-screen debug
+        const cnt = (result.subCategoryTotals || []).length;
+        document.getElementById("subDebug").innerHTML = "SubCategory rows loaded: " + cnt;
+        populateDrilldownCategories(budgetRows);
+        const cardTotals = result.cardTotals || [];
+
+        /******** Summary Snapshot ********/
+        const summaryDiv = document.getElementById("summaryContent");
+        summaryDiv.innerHTML = `
+          <b>Month:</b> ${monthKey}<br>
+          <b>Actual Expenses:</b> ${s.actualSpending}<br>
+          <b>Normal EXP:</b> ${s.totalNormalExpenses}<br>
+          <b>CC Spend:</b> ${s.totalCCSpend}<br>
+          <b>Bills Paid:</b> ${s.totalCCBillsPaid}<br>
+          <b>Savings (SAV):</b> ${s.totalSavings}<br>
+          <b>Credits (CR):</b> ${s.totalCredits}<br>
+          <b>Net Cash Flow:</b> ${s.netCashFlow}<br>
+          <b>CC Outstanding:</b> ${s.ccOutstanding}<br>
+        `;
+        if (s.overallBudget) {
+          summaryDiv.innerHTML += `
+            <hr>
+            <b>Overall Budget:</b> ${s.overallBudget}<br>
+            <b>Remaining:</b> ${s.overallBudgetRemaining}<br>
+            <b>Used %:</b> ${s.overallBudgetUsedPct.toFixed(1)}%
+          `;
+        }
+
+        /******** INSIGHTS SECTION (inside Summary card, end) ********/
+        let insightsHtml = `
+          <div style="
+            background: #f4f7ff;
+            border: 1px solid #dce3ff;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 12px;
+          ">
+            <div style="font-weight:bold; color:#1a237e; margin-bottom:6px; font-size:1rem;">
+              📊 Insights
+            </div>
+        `;
+
+        // Top 3 categories by spend
+        if (budgetRows && budgetRows.length > 0) {
+          const sortedCats = [...budgetRows].sort((a, b) => b.spent - a.spent);
+          const top3 = sortedCats.slice(0, 3).filter(r => r.spent > 0);
+
+          if (top3.length > 0) {
+            insightsHtml += `
+              <div style="margin-bottom:8px;">
+                <span style="font-weight:bold; color:#3949ab;">🏆 Top Categories</span>
+                <ul style="margin:6px 0 0 15px; padding:0;">
+            `;
+            top3.forEach(r => {
+              insightsHtml += `
+                <li style="margin-bottom:2px;">
+                  <span style="color:#1e3d8f;">${r.category}</span> – ₹${r.spent.toFixed(0)}
+                </li>`;
+            });
+            insightsHtml += `
+                </ul>
+              </div>
+            `;
+          }
+        }
+
+        // Daily insights: highest spend, best & worst net days
+        if (daily && daily.length > 0) {
+          let bestNet = daily[0];
+          let worstNet = daily[0];
+          let maxDebit = daily[0];
+
+          daily.forEach(d => {
+            if (d.net > bestNet.net) bestNet = d;
+            if (d.net < worstNet.net) worstNet = d;
+            if (d.debit > maxDebit.debit) maxDebit = d;
+          });
+
+          insightsHtml += `
+            <div style="margin-top:8px;">
+              <div style="margin-bottom:6px;">
+                <span style="font-weight:bold; color:#d32f2f;">🔥 Highest Spend:</span>
+                ₹${maxDebit.debit.toFixed(0)} on ${maxDebit.date}
+              </div>
+
+              <div style="margin-bottom:6px;">
+                <span style="font-weight:bold; color:#2e7d32;">💚 Best Net Day:</span>
+                ₹${bestNet.net.toFixed(0)} on ${bestNet.date}
+              </div>
+
+              <div style="margin-bottom:6px;">
+                <span style="font-weight:bold; color:#c62828;">🔴 Worst Net Day:</span>
+                ₹${worstNet.net.toFixed(0)} on ${worstNet.date}
+              </div>
+            </div>
+          `;
+        }
+
+        insightsHtml += `</div>`;
+        summaryDiv.innerHTML += insightsHtml;
+
+        /******** Budget Summary ********/
+        const budgetDiv = document.getElementById("budgetSummaryContent");
+        if (!s.overallBudget && budgetRows.length === 0) {
+          budgetDiv.innerHTML = "No budget configured.";
+        } else {
+          let html = "";
+          if (s.overallBudget) {
+            html += `
+              <b>Overall Budget:</b> ${s.overallBudget}<br>
+              <b>Remaining:</b> ${s.overallBudgetRemaining}<br>
+              <b>Used:</b> ${s.overallBudgetUsedPct.toFixed(1)}%<br><br>
+            `;
+          }
+          if (budgetRows.length > 0) {
+            html += `
+              <table>
+                <thead>
+                  <tr>
+                    <th style="text-align:left;">Category</th>
+                    <th style="text-align:right;">Budget</th>
+                    <th style="text-align:right;">Spent</th>
+                    <th style="text-align:right;">Diff</th>
+                  </tr>
+                </thead>
+                <tbody>
+            `;
+            budgetRows.forEach(r => {
+              const col = r.diff >= 0 ? "#2e7d32" : "#c62828";
+              html += `
+                <tr>
+                  <td>${r.category}</td>
+                  <td style="text-align:right;">${r.budget}</td>
+                  <td style="text-align:right;">${r.spent}</td>
+                  <td style="text-align:right;color:${col};">${r.diff}</td>
+                </tr>
+              `;
+            });
+            html += "</tbody></table>";
+          }
+          budgetDiv.innerHTML = html;
+        }
+
+        /******** Charts ********/
+        renderChartsOnly();
+
+      
+        /******** Daily Summary ********/
+        const dailyDiv = document.getElementById("dailySummaryContent");
+        if (daily.length === 0) {
+          dailyDiv.innerHTML = "No daily data.";
+        } else {
+          let t = `
+            <table>
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Date</th>
+                  <th style="text-align:right;">Debit</th>
+                  <th style="text-align:right;">Credit</th>
+                  <th style="text-align:right;">Net</th> 
+                </tr>
+              </thead>
+              <tbody>
+          `;
+          daily.forEach(r => {
+            const col = r.net >= 0 ? "#2e7d32" : "#c62828";
+            t += `
+              <tr>
+                <td style="text-align:left;">${r.date}</td>
+                <td style="text-align:right;">${r.debit}</td>
+                <td style="text-align:right;">${r.credit}</td>
+                <td style="text-align:right;color:${col};">${r.net}</td>
+              </tr>
+            `;
+          });
+          t += "</tbody></table>";
+          dailyDiv.innerHTML = t;
+        }
+      }
+
+      /******** Charts: Category Pie ********/
+      function drawCategoryChart(rows) {
+        const div = document.getElementById("categoryChart");
+        if (!rows || rows.length === 0) {
+          div.innerHTML = "No EXP category data.";
+          return;
+        }
+        const data = new google.visualization.DataTable();
+        data.addColumn("string", "Category");
+        data.addColumn("number", "Spent");
+        data.addColumn({ type: "string", role: "tooltip", p: { html: true }});
+        rows.forEach(r => {
+          const tip = `<div style=\"padding:6px\"><b>${r.category}</b><br>
+            Spent: ${r.spent}<br>Budget: ${r.budget}<br>Diff: ${r.diff}</div>`;
+          data.addRow([r.category, r.spent, tip]);
+        });
+        const options = {
+          title: "Category Spend",
+          tooltip: { isHtml: true },
+          legend: { position: "right" },
+          chartArea: { width: "65%", height: "70%" }
+        };
+        new google.visualization.PieChart(div).draw(data, options);
+      }
+      // Store last loaded monthly data so drilldown can re-render without re-fetch
+let LAST_MONTH_DATA = null;
+
+// Called when drilldown dropdown changes
+function renderChartsOnly() {
+  if (!LAST_MONTH_DATA) return;
+  const drillCat = document.getElementById("drillCategory").value;
+  const budgetRows = LAST_MONTH_DATA.categoryBudgets || [];
+  const daily = LAST_MONTH_DATA.daily || [];
+  const cardTotals = LAST_MONTH_DATA.cardTotals || [];
+  const subTotals = LAST_MONTH_DATA.subCategoryTotals || [];
+
+  // existing charts
+  drawCategoryChart(budgetRows);
+  drawDailyTrendChart(daily);
+  drawCardChart(cardTotals);
+
+  // drilldown subcategory chart
+  drawSubCategoryChart(subTotals, drillCat);
+}
+
+function populateDrilldownCategories(budgetRows) {
+  const sel = document.getElementById("drillCategory");
+  if (!sel) return;
+
+  // keep current selection if possible
+  const current = sel.value || "ALL";
+  sel.innerHTML = '<option value="ALL">All</option>';
+
+  // budgetRows has {category: CAT, ...}
+  (budgetRows || []).map(r => r.category).sort().forEach(cat => {
+    const opt = document.createElement("option");
+    opt.value = cat;
+    opt.textContent = cat;
+    sel.appendChild(opt);
+  });
+
+  // restore selection
+  sel.value = current;
+}
+
+// Draw subcategory chart for selected category
+function drawSubCategoryChart(subTotals, drillCat) {
+  const div = document.getElementById("subCategoryChart");
+  if (!div) return;
+
+  // If ALL selected, hide chart
+  if (!drillCat || drillCat === "ALL") {
+    div.style.display = "none";
+    div.innerHTML = "";
+    return;
+  }
+
+  // Filter subTotals to selected category
+  const rows = (subTotals || []).filter(r => r.category === drillCat);
+
+  if (!rows || rows.length === 0) {
+    div.style.display = "block";
+    div.innerHTML = "No sub-category data for selected category.";
+    return;
+  }
+
+  div.style.display = "block";
+
+  const data = new google.visualization.DataTable();
+  data.addColumn("string", "SubCategory");
+  data.addColumn("number", "Amount");
+  data.addColumn({ type: "string", role: "tooltip", p: { html: true } });
+
+  rows
+    .slice()
+    .sort((a, b) => b.amount - a.amount)
+    .forEach(r => {
+      const tip = `<div style="padding:6px"><b>${r.subCategory}</b><br>₹${r.amount.toFixed(0)}</div>`;
+      data.addRow([r.subCategory, r.amount, tip]);
+    });
+
+  const options = {
+    title: `Sub-Category Breakdown – ${drillCat}`,
+    tooltip: { isHtml: true },
+    legend: { position: "right" },
+    chartArea: { width: "65%", height: "70%" }
+  };
+
+  new google.visualization.PieChart(div).draw(data, options);
+}
+
+
+      /******** Charts: Daily Trend ********/
+      function drawDailyTrendChart(rows) {
+        const div = document.getElementById("dailyTrendChart");
+        if (!rows || rows.length === 0) {
+          div.innerHTML = "No daily data.";
+          return;
+        }
+        const data = new google.visualization.DataTable();
+        data.addColumn("string", "Date");
+        data.addColumn("number", "Debit");
+        data.addColumn({ type: "string", role: "tooltip", p: { html: true }});
+        rows.forEach(r => {
+          const tip = `<div style=\"padding:6px\">
+            <b>${r.date}</b><br>Debit: ${r.debit}<br>Credit: ${r.credit}<br>Net: ${r.net}
+          </div>`;
+          data.addRow([r.date, r.debit, tip]);
+        });
+        const labelStep = Math.max(1, Math.floor(rows.length / 7));
+        const options = {
+          title: "Daily Outflows (Total Debit)",
+          tooltip: { isHtml: true },
+          legend: "none",
+          chartArea: { width: "75%", height: "70%" },
+          hAxis: {
+            slantedText: true,
+            slantedTextAngle: 45,
+            textStyle: { fontSize: 9 },
+            showTextEvery: labelStep
+          }
+        };
+        new google.visualization.LineChart(div).draw(data, options);
+      }
+
+      /******** Charts: Card Column ********/
+      function drawCardChart(rows) {
+        const div = document.getElementById("cardChart");
+        if (!rows || rows.length === 0) {
+          div.innerHTML = "No card activity this month.";
+          return;
+        }
+        const data = new google.visualization.DataTable();
+        data.addColumn("string", "Card");
+        data.addColumn("number", "CC Spend");
+        data.addColumn("number", "Bills");
+        data.addColumn({ type: "string", role: "tooltip", p: { html: true }});
+        rows.forEach(r => {
+          const tip = `<div style=\"padding:6px\">
+            <b>${r.card}</b><br>Spend: ${r.ccSpend}<br>Bills: ${r.ccBill}
+          </div>`;
+          data.addRow([r.card, r.ccSpend, r.ccBill, tip]);
+        });
+        const options = {
+          title: "Card Spend vs Bills",
+          tooltip: { isHtml: true },
+          legend: { position: "top" },
+          chartArea: { width: "70%", height: "70%" }
+        };
+        new google.visualization.ColumnChart(div).draw(data, options);
+      }
+
+      function populateSearchCategories() {
+  const catSel = document.getElementById("searchCategory");
+  if (!catSel) return;
+
+  catSel.innerHTML = '<option value="ALL">All</option>';
+  Object.keys(CATEGORY_MAP).sort().forEach(cat => {
+    const opt = document.createElement("option");
+    opt.value = cat;
+    opt.textContent = cat;
+    catSel.appendChild(opt);
+  });
+
+  onSearchCategoryChange();
+}
+
+function onSearchCategoryChange() {
+  const cat = document.getElementById("searchCategory").value;
+  const subSel = document.getElementById("searchSubCategory");
+  if (!subSel) return;
+
+  subSel.innerHTML = '<option value="ALL">All</option>';
+  if (cat === "ALL") return;
+
+  const subs = CATEGORY_MAP[cat] || [];
+  subs.forEach(sub => {
+    const opt = document.createElement("option");
+    opt.value = sub;
+    opt.textContent = sub;
+    subSel.appendChild(opt);
+  });
+}
+
+          /******** SEARCH & FILTER ********/
+      function runSearch() {
+        const filters = {
+          text: document.getElementById("searchText").value,
+          type: document.getElementById("searchType").value,
+          category: document.getElementById("searchCategory").value,
+          subCategory: document.getElementById("searchSubCategory").value,
+          card: document.getElementById("searchCard").value,
+          dateFrom: document.getElementById("searchDateFrom").value,
+          dateTo: document.getElementById("searchDateTo").value,
+          minAmount: document.getElementById("searchMinAmount").value,
+          maxAmount: document.getElementById("searchMaxAmount").value
+        };
+        const resDiv = document.getElementById("searchResults");
+        resDiv.innerHTML = "Searching…";
+        google.script.run
+          .withSuccessHandler(renderSearchResults)
+          .withFailureHandler(err => resDiv.innerHTML = "Error: " + err.message)
+          .searchTransactions(filters);
+      }
+
+      function renderSearchResults(rows) {
+        const resDiv = document.getElementById("searchResults");
+        if (!rows || rows.length === 0) {
+          resDiv.innerHTML = "No matching transactions.";
+          return;
+        }
+        let html = `
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th style="text-align:right;">Amount</th>
+                <th>Category</th>
+                <th>Notes</th>
+                <th>Card</th>
+                <th>Tag</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        rows.forEach(r => {
+          html += `
+            <tr>
+              <td>${r.date}</td>
+              <td>${r.type}</td>
+              <td style="text-align:right;">${r.amount}</td>
+              <td>${r.category}</td>
+              <td>${r.notes}</td>
+              <td>${r.card}</td>
+              <td>${r.tag}</td>
+            </tr>
+          `;
+        });
+        html += "</tbody></table>";
+        resDiv.innerHTML = html;
+      }
+
+      /******** QUICK ACTIONS ********/
+      function setSearchFiltersAndRun(opts) {
+        document.getElementById("searchText").value       = opts.text || "";
+        document.getElementById("searchType").value       = opts.type || "ALL";
+        document.getElementById("searchCard").value       = opts.card || "ALL";
+        document.getElementById("searchDateFrom").value   = opts.dateFrom || "";
+        document.getElementById("searchDateTo").value     = opts.dateTo || "";
+        document.getElementById("searchMinAmount").value  = (opts.minAmount != null ? opts.minAmount : "");
+        document.getElementById("searchMaxAmount").value  = (opts.maxAmount != null ? opts.maxAmount : "");
+        runSearch();
+      }
+
+      function formatDateInput(d) {
+        const y = d.getFullYear();
+        const m = ("0" + (d.getMonth() + 1)).slice(-2);
+        const day = ("0" + d.getDate()).slice(-2);
+        return `${y}-${m}-${day}`;
+      }
+
+      function quickAction(action) {
+        const today = new Date();
+        let from, to;
+
+        switch (action) {
+          /* Time-based */
+          case "last7":
+            to = new Date();
+            from = new Date();
+            from.setDate(to.getDate() - 6);
+            setSearchFiltersAndRun({ type: "ALL", card: "ALL", dateFrom: formatDateInput(from), dateTo: formatDateInput(to), text: "", minAmount: "", maxAmount: "" });
+            break;
+          case "last15":
+            to = new Date();
+            from = new Date();
+            from.setDate(to.getDate() - 14);
+            setSearchFiltersAndRun({ type: "ALL", card: "ALL", dateFrom: formatDateInput(from), dateTo: formatDateInput(to), text: "", minAmount: "", maxAmount: "" });
+            break;
+          case "thisMonth": {
+            const y = today.getFullYear();
+            const m = today.getMonth();
+            from = new Date(y, m, 1);
+            to   = new Date(y, m + 1, 0);
+            setSearchFiltersAndRun({ type: "ALL", card: "ALL", dateFrom: formatDateInput(from), dateTo: formatDateInput(to), text: "", minAmount: "", maxAmount: "" });
+            break;
+          }
+          case "lastMonth": {
+            const y = today.getFullYear();
+            const m = today.getMonth() - 1;
+            from = new Date(y, m, 1);
+            to   = new Date(y, m + 1, 0);
+            setSearchFiltersAndRun({ type: "ALL", card: "ALL", dateFrom: formatDateInput(from), dateTo: formatDateInput(to), text: "", minAmount: "", maxAmount: "" });
+            break;
+          }
+
+          /* Spend-based */
+          case "large1k":
+            setSearchFiltersAndRun({ type: "EXP", card: "ALL", text: "", minAmount: 1000, maxAmount: "" });
+            break;
+          case "large3k":
+            setSearchFiltersAndRun({ type: "EXP", card: "ALL", text: "", minAmount: 3000, maxAmount: "" });
+            break;
+          case "large5k":
+            setSearchFiltersAndRun({ type: "EXP", card: "ALL", text: "", minAmount: 5000, maxAmount: "" });
+            break;
+          case "onlyExp":
+            setSearchFiltersAndRun({ type: "EXP", card: "ALL", text: "", minAmount: "", maxAmount: "" });
+            break;
+          case "onlySav":
+            setSearchFiltersAndRun({ type: "SAV", card: "ALL", text: "", minAmount: "", maxAmount: "" });
+            break;
+          case "onlyCC":
+            setSearchFiltersAndRun({ type: "CC", card: "ALL", text: "", minAmount: "", maxAmount: "" });
+            break;
+
+          /* Category-based (text search) */
+          case "catFood":
+            setSearchFiltersAndRun({ type: "EXP", card: "ALL", text: "food", minAmount: "", maxAmount: "" });
+            break;
+          case "catShopping":
+            setSearchFiltersAndRun({ type: "EXP", card: "ALL", text: "shopping", minAmount: "", maxAmount: "" });
+            break;
+          case "catTravel":
+            setSearchFiltersAndRun({ type: "EXP", card: "ALL", text: "travel", minAmount: "", maxAmount: "" });
+            break;
+          case "catGroceries":
+            setSearchFiltersAndRun({ type: "EXP", card: "ALL", text: "groc", minAmount: "", maxAmount: "" });
+            break;
+          case "catFuel":
+            setSearchFiltersAndRun({ type: "EXP", card: "ALL", text: "fuel", minAmount: "", maxAmount: "" });
+            break;
+          case "catInvest":
+            setSearchFiltersAndRun({ type: "SAV", card: "ALL", text: "", minAmount: "", maxAmount: "" });
+            break;
+        }
+      }
+
+      /******** SUBMIT TRANSACTION ********/
+      function submitForm() {
+        const type = document.getElementById("type").value;
+        const amount = document.getElementById("amount").value;
+        const category = document.getElementById("category").value;
+        const subCategory = document.getElementById("subCategory").value;
+        const card = document.getElementById("card").value;
+        const notes = document.getElementById("notes").value;
+        const entryDate = document.getElementById("entryDate").value;
+
+        const msg = document.getElementById("message");
+
+        if (!amount || Number(amount) <= 0) {
+          msg.innerHTML = "Invalid amount.";
+          msg.className = "error";
+          return;
+        }
+
+        if ((type === "EXP" || type === "CR" || type === "SAV") && !category) {
+          msg.innerHTML = "Category required.";
+          msg.className = "error";
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(() => {
+            msg.innerHTML = "Saved!";
+            msg.className = "success";
+            document.getElementById("amount").value = "";
+            document.getElementById("notes").value = "";
+            loadMonthlyData();
+          })
+          .withFailureHandler(err => {
+            msg.innerHTML = err.message;
+            msg.className = "error";
+          })
+          .addTransaction({ type, amount, category, subCategory, card, notes, entryDate });
+      }
+      function loadAiTrendComparisonCompact() {
+  const monthKey = getSelectedMonthKey();
+  const div = document.getElementById("aiTrendCompactArea");
+
+  div.innerHTML = "⏳ Analyzing trends...";
+
+  google.script.run
+    .withSuccessHandler(html => div.innerHTML = html)
+    .withFailureHandler(err => div.innerHTML = "❌ Error: " + err.message)
+    .getAiTrendComparisonCompact(monthKey);
+}
+    
+    </script>
+  </body>
+</html>
